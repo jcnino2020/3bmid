@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAD Random Quiz Generator (150 Question Bank)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000000;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 700px;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .quiz-screen {
+            text-align: left;
+        }
+
+        #question-text {
+            font-size: 1.25em;
+            font-weight: 500;
+            margin-bottom: 25px;
+        }
+
+        #progress-text {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        #options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .option-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #ecf0f1;
+            color: #34495e;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .option-btn.correct {
+            background-color: #2ecc71;
+            color: white;
+            border-color: #27ae60;
+        }
+
+        .option-btn.incorrect {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+        
+        .option-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .control-btn {
+            display: inline-block;
+            width: 200px;
+            padding: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background-color 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background-color: #2980b9;
+        }
+
+        #results-screen h2 {
+            color: #2c3e50;
+        }
+
+        #score-text {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #3498db;
+            margin: 20px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <h1>SAD Master Quiz Generator</h1>
+            <p>Test your knowledge with a unique, 30-question randomized quiz from a bank of 150 questions covering Modules 1-3.</p>
+            <button id="start-btn" class="control-btn">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <div id="progress-text"></div>
+            <p id="question-text"></p>
+            <div id="options-container"></div>
+            <button id="next-btn" class="control-btn hidden">Next Question</button>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden">
+            <h2>Quiz Complete!</h2>
+            <p id="score-text"></p>
+            <p>You can take another random quiz to improve your score.</p>
+            <button id="restart-btn" class="control-btn">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const testBank = [
+            // --- Module 1: Introduction to SAD & SDLC (MC) ---
+            { type: 'mc', question: "What is the primary output of the Systems Analysis phase?", options: ["A fully functional program", "A project budget", "The System Requirements Specification", "User training manuals"], answer: "The System Requirements Specification" },
+            { type: 'mc', question: "A collection of interrelated components that function together to achieve an outcome is a(n):", options: ["Methodology", "System", "Technique", "Tool"], answer: "System" },
+            { type: 'mc', question: "The 'Design' phase of the SDLC focuses on:", options: ["'What' the system must do", "'Why' the system is needed", "'How' the system will be built", "'Who' will use the system"], answer: "'How' the system will be built" },
+            { type: 'mc', question: "The process of breaking a system into smaller, more manageable parts is called:", options: ["Integration", "Abstraction", "Decomposition", "Encapsulation"], answer: "Decomposition" },
+            { type: 'mc', question: "Who acts as the primary bridge between business users and the technical development team?", options: ["Project Manager", "Database Administrator", "Systems Analyst", "Lead Programmer"], answer: "Systems Analyst" },
+            { type: 'mc', question: "Which SDLC phase includes user training and data conversion activities?", options: ["Planning", "Design", "Analysis", "Implementation"], answer: "Implementation" },
+            { type: 'mc', question: "The ongoing process of fixing bugs and adding enhancements after the system is live is called:", options: ["Deployment", "Support / Maintenance", "Testing", "Analysis"], answer: "Support / Maintenance" },
+            { type: 'mc', question: "What is an Information System?", options: ["Only the hardware and software", "A system that collects, processes, stores, and outputs information", "A collection of unrelated data", "A type of programming language"], answer: "A system that collects, processes, stores, and outputs information" },
+            { type: 'mc', question: "The overall framework that governs all activities of a system development project from start to finish is the:", options: ["Programming Style Guide", "Database Schema", "Systems Development Life Cycle (SDLC)", "Network Topology"], answer: "Systems Development Life Cycle (SDLC)" },
+            { type: 'mc', question: "A 'subsystem' is best described as:", options: ["A system that contains other systems", "A part of a larger system", "An external system that provides data", "A system that has failed"], answer: "A part of a larger system" },
+            // --- Module 1: Introduction to SAD & SDLC (T/F) ---
+            { type: 'tf', question: "True or False: The Systems Analysis phase determines 'how' a system will be built.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: A systems analyst is also known as an 'agent of change'.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: The Planning phase is the first phase of the SDLC.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: Once a system is in the Support phase, no further development work is ever needed.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: An Information System includes people and procedures, not just hardware and software.", options: ["True", "False"], answer: "True" },
+
+            // --- Module 1: Software Process Models (MC) ---
+            { type: 'mc', question: "Which software process model is known for its linear, sequential approach with distinct phases?", options: ["Agile", "Spiral", "Waterfall", "Prototyping"], answer: "Waterfall" },
+            { type: 'mc', question: "What is the primary advantage of the Prototyping model?", options: ["It is the fastest model to complete a project", "It helps clarify user requirements early on", "It requires no documentation", "It is best for projects with high technical risk"], answer: "It helps clarify user requirements early on" },
+            { type: 'mc', question: "Scrum, a popular Agile framework, uses short, time-boxed iterations called:", options: ["Sprints", "Meetings", "Phases", "Cycles"], answer: "Sprints" },
+            { type: 'mc', question: "The Spiral model is fundamentally a ________-driven process model.", options: ["Data", "Schedule", "Risk", "User"], answer: "Risk" },
+            { type: 'mc', question: "A key principle of Agile development is:", options: ["Comprehensive documentation over working software", "Following a plan over responding to change", "Customer collaboration over contract negotiation", "Processes and tools over individuals and interactions"], answer: "Customer collaboration over contract negotiation" },
+            { type: 'mc', question: "The main weakness of the Waterfall model is:", options: ["Its lack of structure", "Its difficulty in handling changing requirements", "Its requirement of a small team size", "Its focus on user feedback"], answer: "Its difficulty in handling changing requirements" },
+            { type: 'mc', question: "Which model combines elements of both prototyping and the waterfall model in an iterative fashion?", options: ["V-Model", "Incremental Model", "Spiral Model", "RAD Model"], answer: "Spiral Model" },
+            { type: 'mc', question: "RAD (Rapid Application Development) relies heavily on:", options: ["Extensive upfront planning", "Prototyping and strong user involvement", "Minimal coding", "A large development team"], answer: "Prototyping and strong user involvement" },
+            { type: 'mc', question: "In Scrum, the list of features and requirements for the product is called the:", options: ["Sprint Goal", "Product Backlog", "Daily Standup", "Burndown Chart"], answer: "Product Backlog" },
+            { type: 'mc', question: "An 'iterative' development approach means:", options: ["The project is done in one single pass", "The project is broken into small, repeatable cycles", "The project has no planning phase", "The project is outsourced to another company"], answer: "The project is broken into small, repeatable cycles" },
+            // --- Module 1: Software Process Models (T/F) ---
+            { type: 'tf', question: "True or False: Agile methodologies are considered 'predictive' rather than 'adaptive'.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The Waterfall model is well-suited for projects where requirements are not well understood.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: In Extreme Programming (XP), developers often work in pairs (pair programming).", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: A key goal of the Spiral model is to manage and mitigate project risks early.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: Incremental development means delivering the entire system at once at the end of the project.", options: ["True", "False"], answer: "False" },
+
+            // --- Module 2: PIECES Framework & Project Initiation (MC) ---
+            { type: 'mc', question: "In the PIECES framework, a problem like 'inaccurate or untimely data' falls under:", options: ["Performance", "Information", "Economics", "Control"], answer: "Information" },
+            { type: 'mc', question: "The 'E' in PIECES can stand for Economics or:", options: ["Execution", "Enhancement", "Efficiency", "Environment"], answer: "Efficiency" },
+            { type: 'mc', question: "A project that is started to comply with a new industry standard is an example of a(n):", options: ["Problem", "Opportunity", "Directive", "Objective"], answer: "Directive" },
+            { type: 'mc', question: "The 'P' in the PIECES framework refers to:", options: ["Planning", "People", "Performance", "Process"], answer: "Performance" },
+            { type: 'mc', question: "Which PIECES category would address concerns about data security and fraud prevention?", options: ["Information", "Control / Security", "Service", "Efficiency"], answer: "Control / Security" },
+            { type: 'mc', question: "A project initiated to explore a new market is best described as being triggered by a(n):", options: ["Problem", "Opportunity", "Directive", "Constraint"], answer: "Opportunity" },
+            { type: 'mc', question: "The main goal of using the PIECES framework is to:", options: ["Select a programming language", "Identify areas for system improvement", "Calculate the project budget", "Design the database schema"], answer: "Identify areas for system improvement" },
+            { type: 'mc', question: "A complaint that a system is 'hard to use' would fall under which PIECES category?", options: ["Performance", "Economics", "Control", "Service"], answer: "Service" },
+            { type: 'mc', question: "Cost-benefit analysis is a key activity related to which PIECES category?", options: ["Information", "Economics", "Efficiency", "Service"], answer: "Economics" },
+            { type: 'mc', question: "Analyzing system throughput and response time relates to the ________ category of PIECES.", options: ["Performance", "Information", "Control", "Efficiency"], answer: "Performance" },
+            // --- Module 2: PIECES Framework & Project Initiation (T/F) ---
+            { type: 'tf', question: "True or False: A project can only be initiated in response to a problem.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The PIECES framework is only applicable to computerized systems, not manual ones.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: A 'directive' is a new requirement imposed by management or an external entity like the government.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: An 'opportunity' is a chance to improve the organization even if no problem exists.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: Redundant data processing is an issue that falls under the 'Service' category of PIECES.", options: ["True", "False"], answer: "False" },
+
+            // --- Module 2: Data Collection & Project Planning (MC) ---
+            { type: 'mc', question: "Which data collection method is most suitable for gathering quantitative data from a large, anonymous group?", options: ["Interviews", "Observation", "JAD Sessions", "Questionnaires / Surveys"], answer: "Questionnaires / Surveys" },
+            { type: 'mc', question: "A key disadvantage of 'Observation' as a data collection technique is that:", options: ["It is very expensive", "It provides very shallow information", "People may alter their behavior when watched", "It cannot be used for existing systems"], answer: "People may alter their behavior when watched" },
+            { type: 'mc', question: "A facilitated workshop designed to accelerate the requirements gathering process is known as:", options: ["A staff meeting", "A Joint Application Development (JAD) session", "A system demo", "A code review"], answer: "A Joint Application Development (JAD) session" },
+            { type: 'mc', question: "Assessing if the company possesses the necessary hardware and software to build a system is part of:", options: ["Economic Feasibility", "Operational Feasibility", "Technical Feasibility", "Schedule Feasibility"], answer: "Technical Feasibility" },
+            { type: 'mc', question: "The 'loss of customer goodwill' is an example of a(n):", options: ["Tangible Cost", "Intangible Cost", "Tangible Benefit", "Intangible Benefit"], answer: "Intangible Cost" },
+            { type: 'mc', question: "The document that formally authorizes a project and provides the project manager with authority is the:", options: ["Gantt Chart", "Project Charter", "Requirements Specification", "Feasibility Study"], answer: "Project Charter" },
+            { type: 'mc', question: "Operational Feasibility is primarily concerned with:", options: ["The project's timeline", "The financial viability of the project", "Whether the proposed system will work in the organization", "The availability of technology"], answer: "Whether the proposed system will work in the organization" },
+            { type: 'mc', question: "A 'reduction in employee overtime' after a new system is implemented is an example of a(n):", options: ["Intangible Benefit", "Tangible Benefit", "Intangible Cost", "Tangible Cost"], answer: "Tangible Benefit" },
+            { type: 'mc', question: "What is a 'stakeholder' in a project?", options: ["Only the project sponsor", "Only the end-users", "Anyone with an interest in or who is affected by the project", "Only the development team members"], answer: "Anyone with an interest in or who is affected by the project" },
+            { type: 'mc', question: "Reading existing company reports, organization charts, and policy manuals is part of which data collection technique?", options: ["Interviews", "Observation", "Document Analysis / Background Reading", "Prototyping"], answer: "Document Analysis / Background Reading" },
+            // --- Module 2: Data Collection & Project Planning (T/F) ---
+            { type: 'tf', question: "True or False: Technical feasibility and economic feasibility are the same thing.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: Open-ended questions are best suited for questionnaires sent to hundreds of people.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: A project's 'scope' defines the boundaries of what the project will and will not do.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: All project risks can be eliminated during the planning phase.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The cost of new hardware is considered a tangible cost.", options: ["True", "False"], answer: "True" },
+
+            // --- Module 3: Tools, Models, and Techniques (MC) ---
+            { type: 'mc', question: "A graphical representation of some aspect of a system is a:", options: ["Tool", "Technique", "Model", "Methodology"], answer: "Model" },
+            { type: 'mc', question: "A software program, such as a diagramming application or a CASE tool, is an example of a:", options: ["Tool", "Technique", "Model", "Methodology"], answer: "Tool" },
+            { type: 'mc', question: "A step-by-step guideline for completing a specific task, like the CRUD technique, is a:", options: ["Tool", "Technique", "Model", "Methodology"], answer: "Technique" },
+            { type: 'mc', question: "A comprehensive plan that encompasses the entire SDLC is a:", options: ["Tool", "Technique", "Model", "Methodology"], answer: "Methodology" },
+            { type: 'mc', question: "Which of the following is a type of model used to manage the development process?", options: ["Data Flow Diagram (DFD)", "Gantt Chart", "Class Diagram", "Use Case Diagram"], answer: "Gantt Chart" },
+            { type: 'mc', question: "UML stands for:", options: ["Unified Management Language", "Universal Modeling Logic", "Unified Modeling Language", "Universal Markup Language"], answer: "Unified Modeling Language" },
+            { type: 'mc', question: "CASE tools are software applications designed to:", options: ["Write program code automatically", "Automate and support system development activities", "Manage project budgets", "Test network security"], answer: "Automate and support system development activities" },
+            { type: 'mc', question: "An Integrated Development Environment (IDE) is a:", options: ["Modeling technique", "Project planning tool", "Software application that helps programmers develop software", "Data gathering method"], answer: "Software application that helps programmers develop software" },
+            { type: 'mc', question: "A flowchart is a type of:", options: ["Model", "Technique", "Tool", "Methodology"], answer: "Model" },
+            { type: 'mc', question: "User interviewing is an example of a:", options: ["Model", "Technique", "Tool", "Methodology"], answer: "Technique" },
+             // --- Module 3: Tools, Models, and Techniques (T/F) ---
+            { type: 'tf', question: "True or False: A model is a perfect replica of the real-world thing it represents.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The Unified Process (UP) is a popular methodology for object-oriented development.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: A Gantt chart is primarily used for modeling data relationships.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: UML is a programming language.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: Cost-benefit analysis is considered a 'technique' in SAD.", options: ["True", "False"], answer: "True" },
+
+            // --- Module 3: Use Case Diagrams (MC) ---
+            { type: 'mc', question: "In a Use Case Diagram, an 'Actor' is always:", options: ["A human user", "A database system", "A programmer", "External to the system"], answer: "External to the system" },
+            { type: 'mc', question: "The relationship between an Actor and a Use Case is called a(n):", options: ["Inheritance", "Association", "Extension", "Inclusion"], answer: "Association" },
+            { type: 'mc', question: "The `<<includes>>` relationship is used when:", options: ["A use case has optional behavior", "A piece of functionality is shared by multiple use cases", "An actor has a specialized role", "A use case can only be run at a certain time"], answer: "A piece of functionality is shared by multiple use cases" },
+            { type: 'mc', question: "Which relationship models optional or exceptional functionality?", options: ["<<includes>>", "<<extends>>", "Generalization", "Association"], answer: "«extends»" },
+            { type: 'mc', question: "A use case name should typically start with a(n):", options: ["Noun", "Adjective", "Verb", "Adverb"], answer: "Verb" },
+            { type: 'mc', question: "The primary purpose of a Use Case Diagram is to:", options: ["Show the database structure", "Detail the program's internal logic", "Illustrate the system's functions from a user's perspective", "Model the flow of data"], answer: "Illustrate the system's functions from a user's perspective" },
+            { type: 'mc', question: "In UML, what shape represents a use case?", options: ["A rectangle", "A circle", "An oval / ellipse", "A diamond"], answer: "An oval / ellipse" },
+            { type: 'mc', question: "A 'secondary actor' in a use case is one that:", options: ["Initiates the use case", "The system needs assistance from to complete the use case", "Is the main user of the system", "Has security privileges"], answer: "The system needs assistance from to complete the use case" },
+            { type: 'mc', question: "The CRUD (Create, Read, Update, Delete) technique is useful for identifying:", options: ["Actors", "Use Cases", "System boundaries", "Risks"], answer: "Use Cases" },
+            { type: 'mc', question: "A 'Generalization' relationship between two Actors means that:", options: ["They are the same person", "One actor is a specialized version of the other", "They cannot interact with the same use cases", "They are part of an external system"], answer: "One actor is a specialized version of the other" },
+             // --- Module 3: Use Case Diagrams (T/F) ---
+            { type: 'tf', question: "True or False: An actor in a use case diagram can be another system.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: A use case diagram describes in detail 'how' the system performs a function.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The `<<extends>>` relationship indicates a mandatory function.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The User Goal Technique is one method for identifying use cases.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: A stick figure is the standard UML symbol for an Actor.", options: ["True", "False"], answer: "True" },
+
+            // --- Module 3: Activity Diagrams (MC) ---
+            { type: 'mc', question: "What is the primary purpose of an Activity Diagram?", options: ["To show the static structure of classes", "To model the workflow or business process", "To describe user interactions", "To detail the database schema"], answer: "To model the workflow or business process" },
+            { type: 'mc', question: "In an Activity Diagram, what is used to separate activities based on who is responsible for them?", options: ["Forks", "Decision Nodes", "Swimlanes", "Merge Nodes"], answer: "Swimlanes" },
+            { type: 'mc', question: "A solid black bar in an Activity Diagram that splits a flow into multiple parallel paths is called a:", options: ["Decision", "Join", "Merge", "Fork"], answer: "Fork" },
+            { type: 'mc', question: "A diamond shape in an Activity Diagram represents a:", options: ["Start point", "End point", "Decision or Merge point", "Parallel activity"], answer: "Decision or Merge point" },
+            { type: 'mc', question: "The symbol for the start of an activity flow is a:", options: ["Solid filled circle", "Hollow circle with a border", "Square", "Diamond"], answer: "Solid filled circle" },
+            { type: 'mc', question: "What is the function of a 'Join' node in an Activity Diagram?", options: ["To start multiple parallel flows", "To synchronize and merge multiple parallel flows back into one", "To indicate an optional path", "To end the entire process"], answer: "To synchronize and merge multiple parallel flows back into one" },
+            { type: 'mc', question: "An arrow in an Activity Diagram represents a(n):", options: ["Actor", "Object", "Control Flow / Transition", "Condition"], answer: "Control Flow / Transition" },
+            { type: 'mc', question: "An Activity Diagram is most similar in purpose to a traditional:", options: ["Organizational Chart", "Flowchart", "Gantt Chart", "ERD"], answer: "Flowchart" },
+            { type: 'mc', question: "A guard condition, like `[Approved]`, would be found next to a flow leaving a:", options: ["Start Node", "Fork Node", "Decision Node", "Activity Node"], answer: "Decision Node" },
+            { type: 'mc', question: "Rounded rectangles in an Activity Diagram represent:", options: ["Decisions", "Actors", "States or Activities", "Notes"], answer: "States or Activities" },
+            // --- Module 3: Activity Diagrams (T/F) ---
+            { type: 'tf', question: "True or False: An Activity Diagram can show parallel activities.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: A 'Fork' node and a 'Decision' node serve the same purpose.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: The final state in an Activity Diagram is represented by a solid black circle.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: Swimlanes are optional but highly recommended for clarifying responsibility.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: Activity Diagrams are part of the UML standard.", options: ["True", "False"], answer: "True" },
+
+            // --- Mixed Review Questions (MC) ---
+            { type: 'mc', question: "Which of the following is a non-functional requirement?", options: ["The system shall allow users to search for customers.", "The system must be available 99.9% of the time.", "The system shall email a receipt after a purchase.", "The system must store order details for 7 years."], answer: "The system must be available 99.9% of the time." },
+            { type: 'mc', question: "What is an 'event' in the context of event decomposition technique?", options: ["A project meeting", "A software bug", "A trigger that causes the system to respond", "A user's opinion"], answer: "A trigger that causes the system to respond" },
+            { type: 'mc', question: "A 'temporal event' is one that is triggered by:", options: ["An external user action", "The passage of time", "A change in system state", "A database error"], answer: "The passage of time" },
+            { type: 'mc', question: "The Unified Process (UP) is an example of a(n):", options: ["Data gathering technique", "Iterative and incremental methodology", "Programming language", "Diagramming tool"], answer: "Iterative and incremental methodology" },
+            { type: 'mc', question: "A Gantt chart is a tool used for:", options: ["Database design", "Project scheduling", "Requirements gathering", "User interface design"], answer: "Project scheduling" },
+            { type: 'mc', question: "Which of the following diagrams is part of UML?", options: ["Data Flow Diagram (DFD)", "Entity-Relationship Diagram (ERD)", "Flowchart", "Class Diagram"], answer: "Class Diagram" },
+            { type: 'mc', question: "The purpose of a 'walkthrough' in SAD is to:", options: ["Train users on the new system", "Review a deliverable for quality and correctness", "Conduct a performance test", "Install the software"], answer: "Review a deliverable for quality and correctness" },
+            { type: 'mc', question: "Which is NOT a phase of the standard SDLC?", options: ["Analysis", "Marketing", "Design", "Implementation"], answer: "Marketing" },
+            { type: 'mc', question: "What does the 'as-is' system model represent?", options: ["The desired future system", "A competitor's system", "The current state of the system or process", "A simplified prototype"], answer: "The current state of the system or process" },
+            { type: 'mc', question: "A 'use case narrative' or 'description' provides:", options: ["A high-level diagram of actors", "A detailed, step-by-step description of a use case", "The project timeline", "The database tables"], answer: "A detailed, step-by-step description of a use case" },
+            // --- Mixed Review Questions (T/F) ---
+            { type: 'tf', question: "True or False: A functional requirement describes a system's quality attribute, such as performance or security.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: A project backlog is a repository of project proposals that are a lower priority.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: The riskiest system implementation strategy is the Parallel approach.", options: ["True", "False"], answer: "False" },
+            { type: 'tf', question: "True or False: A 'steering committee' often prioritizes and approves system development projects.", options: ["True", "False"], answer: "True" },
+            { type: 'tf', question: "True or False: A Data Flow Diagram (DFD) is part of the UML 2.0 standard.", options: ["True", "False"], answer: "False" }
+        ];
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        const progressText = document.getElementById('progress-text');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const scoreText = document.getElementById('score-text');
+
+        let shuffledQuestions, currentQuestionIndex, score;
+        const QUIZ_LENGTH = 30;
+
+        startBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            showQuestion();
+        });
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+
+            shuffledQuestions = testBank.sort(() => Math.random() - 0.5).slice(0, QUIZ_LENGTH);
+            currentQuestionIndex = 0;
+            score = 0;
+            showQuestion();
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = shuffledQuestions[currentQuestionIndex];
+            progressText.innerText = `Question ${currentQuestionIndex + 1} of ${QUIZ_LENGTH}`;
+            questionText.innerText = currentQuestion.question;
+
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.innerText = option;
+                button.classList.add('option-btn');
+                button.addEventListener('click', selectAnswer);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            while (optionsContainer.firstChild) {
+                optionsContainer.removeChild(optionsContainer.firstChild);
+            }
+        }
+
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const correct = selectedBtn.innerText === shuffledQuestions[currentQuestionIndex].answer;
+
+            if (correct) {
+                score++;
+                selectedBtn.classList.add('correct');
+            } else {
+                selectedBtn.classList.add('incorrect');
+            }
+
+            Array.from(optionsContainer.children).forEach(button => {
+                if (button.innerText === shuffledQuestions[currentQuestionIndex].answer) {
+                    button.classList.add('correct');
+                }
+                button.disabled = true;
+            });
+            
+            if (shuffledQuestions.length > currentQuestionIndex + 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                // Use a timeout to let the user see the result of the last question before showing the score
+                setTimeout(showResults, 1000);
+            }
+        }
+        
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            scoreText.innerText = `You scored ${score} out of ${QUIZ_LENGTH}!`;
+        }
+    </script>
+</body>
+</html>
